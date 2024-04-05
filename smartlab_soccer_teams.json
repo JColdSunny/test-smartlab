@@ -1,0 +1,27 @@
+{
+  "league": "smartlab_league",
+  "country": "Germany",
+  "teams": [
+    {
+      "name": "Best marketing",
+      "founding_date": "1998"
+    },
+    {
+      "name": "Hot operations",
+      "founding_date": "2000"
+    },
+    {
+      "name": "Curious devops"
+    },
+    {
+      "name": "Roaming partners",
+      "founding_date": "2001"
+    },
+    {
+      "name": "Salfish sales"
+    },
+    {
+      "name": "Whatever comes next"
+    }
+  ]
+}
