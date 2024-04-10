@@ -8,8 +8,8 @@ import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.core.io.Resource;
-import org.springframework.test.context.junit.jupiter.SpringJUnitConfig;
 import org.springframework.test.util.ReflectionTestUtils;
 
 import java.io.IOException;
@@ -19,7 +19,7 @@ import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatNoException;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 
-@SpringJUnitConfig({GameScheduleService.class})
+@SpringBootTest(classes = {GameScheduleService.class})
 public class GameScheduleServiceTest {
 
     @Autowired
@@ -92,7 +92,7 @@ public class GameScheduleServiceTest {
                 2020-11-14 17:00; Best marketing; Salfish sales;
                 2020-11-14 17:00; Roaming partners; Whatever comes next;
                 2020-11-14 17:00; Hot operations; Curious devops;
-                
+                                
                 2020-12-05 17:00; Roaming partners; Best marketing;
                 2020-12-05 17:00; Salfish sales; Hot operations;
                 2020-12-05 17:00; Whatever comes next; Curious devops;
@@ -123,7 +123,7 @@ public class GameScheduleServiceTest {
 
         String expectedSchedule = """
                 2020-10-17 17:00; Team 1; Team 2;
-                
+                                
                 2020-11-07 17:00; Team 2; Team 1;
                 """;
         assertThat(schedule).isEqualTo(expectedSchedule);
@@ -148,7 +148,7 @@ public class GameScheduleServiceTest {
                 2020-10-24 17:00; Team 4; Team 3;
                 2020-10-31 17:00; Team 1; Team 4;
                 2020-10-31 17:00; Team 3; Team 2;
-                
+                                
                 2020-11-21 17:00; Team 3; Team 1;
                 2020-11-21 17:00; Team 4; Team 2;
                 2020-11-28 17:00; Team 3; Team 4;

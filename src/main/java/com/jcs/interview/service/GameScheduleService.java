@@ -20,11 +20,14 @@ public class GameScheduleService {
     private static final int TEAM_NUMBER = 1;
     private static final int DIVISION_FACTOR = 2;
 
-    @Value("${application.game.start.date}")
-    private String startDate;
+    private final String startDate;
+    private final String startTime;
 
-    @Value("${application.game.start.time}")
-    private String startTime;
+    public GameScheduleService(@Value("${application.game.start.date}")String startDate,
+                               @Value("${application.game.start.time}")String startTime) {
+        this.startDate = startDate;
+        this.startTime = startTime;
+    }
 
     public String generate(LeagueDto league) {
         List<TeamDto> teams = league.teams();
