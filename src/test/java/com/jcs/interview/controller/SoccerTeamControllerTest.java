@@ -25,7 +25,7 @@ public class SoccerTeamControllerTest {
     private GameScheduleService gameScheduleService;
 
     @Test
-    void testCreateScheduleWhenEmptyTeamListBadRequest() throws Exception {
+    void testCreateScheduleWhenEmptyTeamListReturnBadRequest() throws Exception {
         mockMvc.perform(post("/soccer/teams/schedule")
                 .contentType(MediaType.APPLICATION_JSON)
                 .content("""
@@ -39,7 +39,7 @@ public class SoccerTeamControllerTest {
     }
 
     @Test
-    void testCreateScheduleIsOk() throws Exception {
+    void testCreateScheduleReturnOk() throws Exception {
         when(gameScheduleService.generate(any(LeagueDto.class)))
             .thenReturn("Schedule Created");
 

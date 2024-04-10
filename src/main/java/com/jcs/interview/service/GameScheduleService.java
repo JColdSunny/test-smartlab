@@ -2,13 +2,29 @@ package com.jcs.interview.service;
 
 import com.jcs.interview.dto.LeagueDto;
 import com.jcs.interview.dto.TeamDto;
+import org.springframework.beans.factory.annotation.Value;
+import org.springframework.stereotype.Service;
+
 import java.time.LocalDate;
 import java.util.ArrayList;
 import java.util.List;
-import org.springframework.stereotype.Service;
 
 @Service
 public class GameScheduleService {
+    private static final int WEEKS_BETWEEN_ROUNDS = 3;
+    private static final int WEEKS_BETWEEN_GAMES = 1;
+    private static final String NEW_LINE = "\n";
+    private static final String SEMI_COLON = ";";
+    private static final String SPACE = " ";
+    private static final int FIRST_LIST_INDEX = 0;
+    private static final int TEAM_NUMBER = 1;
+    private static final int DIVISION_FACTOR = 2;
+
+    @Value("${application.game.start.date}")
+    private String startDate;
+
+    @Value("${application.game.start.time}")
+    private String startTime;
 
     public String generate(LeagueDto league) {
         List<TeamDto> teams = league.teams();
@@ -21,57 +37,56 @@ public class GameScheduleService {
         }
 
         int gamesInEachRound = teams.size() - 1;
-        LocalDate start = LocalDate.of(2020, 10, 17);
+        LocalDate start = LocalDate.parse(startDate);
         List<LocalDate> firstRoundDates = getSaturdayDates(start, gamesInEachRound);
 
-        String firstRoundGames = generateRound(teams, firstRoundDates, false);
+        String firstRoundGames = generateRound(teams, firstRoundDates, Boolean.FALSE);
 
         LocalDate firstRoundLastDate = firstRoundDates.get(firstRoundDates.size() - 1);
-        LocalDate secondRoundStart = firstRoundLastDate.plusWeeks(3);
+        LocalDate secondRoundStart = firstRoundLastDate.plusWeeks(WEEKS_BETWEEN_ROUNDS);
         List<LocalDate> secondRoundDates = getSaturdayDates(secondRoundStart, gamesInEachRound);
 
-        String secondRoundGames = generateRound(teams, secondRoundDates, true);
+        String secondRoundGames = generateRound(teams, secondRoundDates, Boolean.TRUE);
 
-        return firstRoundGames + "\n" + secondRoundGames;
+        return firstRoundGames + NEW_LINE + secondRoundGames;
     }
 
     private static List<LocalDate> getSaturdayDates(LocalDate startDate, int weeks) {
         List<LocalDate> dates = new ArrayList<>();
         for (int i = 0; i < weeks; i++) {
             dates.add(startDate);
-            startDate = startDate.plusWeeks(1);
+            startDate = startDate.plusWeeks(WEEKS_BETWEEN_GAMES);
         }
         return dates;
     }
 
-    private static String generateRound(List<TeamDto> teams,
-                                        List<LocalDate> dates,
-                                        boolean isReverse) {
-        List<TeamDto> teamList1;
-        List<TeamDto> teamList2;
+    private String generateRound(List<TeamDto> teams,
+                                 List<LocalDate> dates,
+                                 boolean isReverse) {
+        List<TeamDto> firstHalfTeams;
+        List<TeamDto> secondHalfTeams;
 
         if (isReverse) {
-            teamList1 = new ArrayList<>(teams.subList(teams.size() / 2, teams.size()));
-            teamList2 = new ArrayList<>(teams.subList(0, teams.size() / 2));
+            firstHalfTeams = new ArrayList<>(teams.subList(teams.size() / DIVISION_FACTOR, teams.size()));
+            secondHalfTeams = new ArrayList<>(teams.subList(FIRST_LIST_INDEX, teams.size() / DIVISION_FACTOR));
         } else {
-            teamList1 = new ArrayList<>(teams.subList(0, teams.size() / 2));
-            teamList2 = new ArrayList<>(teams.subList(teams.size() / 2, teams.size()));
+            firstHalfTeams = new ArrayList<>(teams.subList(FIRST_LIST_INDEX, teams.size() / DIVISION_FACTOR));
+            secondHalfTeams = new ArrayList<>(teams.subList(teams.size() / DIVISION_FACTOR, teams.size()));
         }
-
-        System.out.println(teamList1);
-        System.out.println(teamList2);
 
         StringBuilder builder = new StringBuilder();
         for (LocalDate date : dates) {
-            for (int i = 0; i < teams.size() / 2; i++) {
-                builder.append(date).append(" 17:00; ")
-                    .append(teamList1.get(i).name()).append("; ")
-                    .append(teamList2.get(i).name()).append(";\n");
+            for (int i = 0; i < teams.size() / DIVISION_FACTOR; i++) {
+                builder.append(date)
+                        .append(SPACE).append(startTime).append(SEMI_COLON).append(SPACE)
+                        .append(firstHalfTeams.get(i).name()).append(SEMI_COLON).append(SPACE)
+                        .append(secondHalfTeams.get(i).name()).append(SEMI_COLON)
+                        .append(NEW_LINE);
             }
 
-            if (teamList2.size() != 1) {
-                teamList2.add(0, teamList1.remove(1));
-                teamList1.add(teamList2.remove(teamList2.size() - 1));
+            if (secondHalfTeams.size() != TEAM_NUMBER) {
+                secondHalfTeams.add(FIRST_LIST_INDEX, firstHalfTeams.remove(1));
+                firstHalfTeams.add(secondHalfTeams.remove(secondHalfTeams.size() - 1));
             }
         }
 
