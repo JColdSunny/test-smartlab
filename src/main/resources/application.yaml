@@ -6,4 +6,4 @@ application:
   game:
     start:
       date: 2020-10-17
-      time: 17:00
+      time: "17:00"

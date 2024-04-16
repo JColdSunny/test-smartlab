@@ -1,6 +1,7 @@
 package com.jcs.interview.controller;
 
 import com.jcs.interview.dto.LeagueDto;
+import com.jcs.interview.dto.ScheduleInfoDto;
 import com.jcs.interview.service.GameScheduleService;
 import jakarta.validation.Valid;
 import org.springframework.web.bind.annotation.PostMapping;
@@ -18,8 +19,8 @@ public class SoccerTeamController {
     }
 
     @PostMapping
-    public String createSchedule(@RequestBody @Valid LeagueDto league) {
-        return gameScheduleService.generate(league);
+    public ScheduleInfoDto createSchedule(@RequestBody @Valid LeagueDto league) {
+        return gameScheduleService.generateGameSchedule(league);
     }
 
 }

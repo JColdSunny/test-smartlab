@@ -5,7 +5,7 @@ import jakarta.validation.constraints.NotBlank;
 
 @JsonIgnoreProperties(ignoreUnknown = true)
 public record TeamDto(
-    @NotBlank String name,
+    @NotBlank(message = "name must not be null or blank") String name,
     String foundingDate
 ) {
 }

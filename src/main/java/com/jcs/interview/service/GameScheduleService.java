@@ -1,61 +1,70 @@
 package com.jcs.interview.service;
 
+import com.jcs.interview.dto.GameInfoDto;
 import com.jcs.interview.dto.LeagueDto;
+import com.jcs.interview.dto.RoundInfoDto;
+import com.jcs.interview.dto.ScheduleInfoDto;
 import com.jcs.interview.dto.TeamDto;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 
-import java.time.LocalDate;
+import java.time.LocalDateTime;
+import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.stream.Collectors;
 
 @Service
 public class GameScheduleService {
+    private static final Logger LOG = LoggerFactory.getLogger(GameScheduleService.class);
+
     private static final int WEEKS_BETWEEN_ROUNDS = 3;
     private static final int WEEKS_BETWEEN_GAMES = 1;
-    private static final String NEW_LINE = "\n";
-    private static final String SEMI_COLON = ";";
-    private static final String SPACE = " ";
     private static final int FIRST_LIST_INDEX = 0;
-    private static final int TEAM_NUMBER = 1;
+    private static final int ONE_TEAM = 1;
     private static final int DIVISION_FACTOR = 2;
 
     private final String startDate;
     private final String startTime;
 
-    public GameScheduleService(@Value("${application.game.start.date}")String startDate,
-                               @Value("${application.game.start.time}")String startTime) {
+    public GameScheduleService(@Value("${application.game.start.date}") String startDate,
+                               @Value("${application.game.start.time}") String startTime) {
         this.startDate = startDate;
         this.startTime = startTime;
     }
 
-    public String generate(LeagueDto league) {
+    public ScheduleInfoDto generateGameSchedule(LeagueDto league) {
         List<TeamDto> teams = league.teams();
-
-        if (teams.isEmpty()) {
-            throw new IllegalArgumentException("No teams found");
-        }
-        if (teams.size() % 2 != 0) {
+        if (isTeamCountOdd(teams.size())) {
             throw new IllegalStateException("The number of teams must be even");
         }
 
         int gamesInEachRound = teams.size() - 1;
-        LocalDate start = LocalDate.parse(startDate);
-        List<LocalDate> firstRoundDates = getSaturdayDates(start, gamesInEachRound);
+        LocalDateTime firstRoundStart = LocalDateTime.parse(startDate + "T" + startTime);
+        List<LocalDateTime> firstRoundDates = getSaturdayDates(firstRoundStart, gamesInEachRound);
 
-        String firstRoundGames = generateRound(teams, firstRoundDates, Boolean.FALSE);
+        RoundInfoDto firstRoundInfo = generateRound(teams, firstRoundDates, Boolean.FALSE);
 
-        LocalDate firstRoundLastDate = firstRoundDates.get(firstRoundDates.size() - 1);
-        LocalDate secondRoundStart = firstRoundLastDate.plusWeeks(WEEKS_BETWEEN_ROUNDS);
-        List<LocalDate> secondRoundDates = getSaturdayDates(secondRoundStart, gamesInEachRound);
+        LocalDateTime firstRoundLastDate = firstRoundDates.getLast();
+        LocalDateTime secondRoundStart = firstRoundLastDate.plusWeeks(WEEKS_BETWEEN_ROUNDS);
 
-        String secondRoundGames = generateRound(teams, secondRoundDates, Boolean.TRUE);
+        List<LocalDateTime> secondRoundDates = getSaturdayDates(secondRoundStart, gamesInEachRound);
 
-        return firstRoundGames + NEW_LINE + secondRoundGames;
+        RoundInfoDto secondRoundInfo = generateRound(teams, secondRoundDates, Boolean.TRUE);
+
+        ScheduleInfoDto scheduleInfo = new ScheduleInfoDto(List.of(firstRoundInfo, secondRoundInfo));
+        logSchedule(scheduleInfo);
+        return scheduleInfo;
     }
 
-    private static List<LocalDate> getSaturdayDates(LocalDate startDate, int weeks) {
-        List<LocalDate> dates = new ArrayList<>();
+    private static boolean isTeamCountOdd(int teamSize) {
+        return teamSize % 2 != 0;
+    }
+
+    private static List<LocalDateTime> getSaturdayDates(LocalDateTime startDate, int weeks) {
+        List<LocalDateTime> dates = new ArrayList<>();
         for (int i = 0; i < weeks; i++) {
             dates.add(startDate);
             startDate = startDate.plusWeeks(WEEKS_BETWEEN_GAMES);
@@ -63,9 +72,9 @@ public class GameScheduleService {
         return dates;
     }
 
-    private String generateRound(List<TeamDto> teams,
-                                 List<LocalDate> dates,
-                                 boolean isReverse) {
+    private RoundInfoDto generateRound(List<TeamDto> teams,
+                                       List<LocalDateTime> dates,
+                                       boolean isReverse) {
         List<TeamDto> firstHalfTeams;
         List<TeamDto> secondHalfTeams;
 
@@ -77,23 +86,31 @@ public class GameScheduleService {
             secondHalfTeams = new ArrayList<>(teams.subList(teams.size() / DIVISION_FACTOR, teams.size()));
         }
 
-        StringBuilder builder = new StringBuilder();
-        for (LocalDate date : dates) {
+        List<GameInfoDto> games = new ArrayList<>();
+        for (LocalDateTime date : dates) {
             for (int i = 0; i < teams.size() / DIVISION_FACTOR; i++) {
-                builder.append(date)
-                        .append(SPACE).append(startTime).append(SEMI_COLON).append(SPACE)
-                        .append(firstHalfTeams.get(i).name()).append(SEMI_COLON).append(SPACE)
-                        .append(secondHalfTeams.get(i).name()).append(SEMI_COLON)
-                        .append(NEW_LINE);
+                games.add(new GameInfoDto(date, firstHalfTeams.get(i).name(), secondHalfTeams.get(i).name()));
             }
 
-            if (secondHalfTeams.size() != TEAM_NUMBER) {
+            if (secondHalfTeams.size() != ONE_TEAM) {
                 secondHalfTeams.add(FIRST_LIST_INDEX, firstHalfTeams.remove(1));
                 firstHalfTeams.add(secondHalfTeams.remove(secondHalfTeams.size() - 1));
             }
         }
 
-        return builder.toString();
+        return new RoundInfoDto(dates.getFirst(), games);
+    }
+
+    private static void logSchedule(ScheduleInfoDto scheduleInfo) {
+
+        String games = scheduleInfo.rounds().stream()
+                .flatMap(round -> round.games().stream())
+                .map(game -> {
+                    DateTimeFormatter dateTimeFormatter = DateTimeFormatter.ofPattern("dd.MM.yyyy HH:mm");
+                    return "%s; %s; %s".formatted(dateTimeFormatter.format(game.date()), game.firstTeam(), game.secondTeam());
+                })
+                .collect(Collectors.joining(System.lineSeparator()));
+        LOG.info(games);
     }
 
 }
