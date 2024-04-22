@@ -15,8 +15,11 @@ import org.springframework.core.io.Resource;
 import java.io.IOException;
 import java.time.LocalDateTime;
 import java.time.temporal.ChronoUnit;
+import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
+import java.util.Map;
 import java.util.Set;
 
 import static org.assertj.core.api.Assertions.assertThat;
@@ -85,7 +88,7 @@ public class GameScheduleServiceTest {
                 .map(RoundInfoDto::games)
                 .forEach(games -> {
                     for (int i = 0; i < games.size() - 1; i++) {
-                        if (games.get(i).date().equals(games.get(i + 1).date())) {
+                        if (games.get(i).date().equals(games.get(i + 1).date())) { // skip the same date games
                             continue;
                         }
 
@@ -109,16 +112,26 @@ public class GameScheduleServiceTest {
     }
 
     @Test
-    public void testGenerateNoRepeatedGames() throws IOException {
+    public void testEachTeamPlayedOnlyOnceAgainstEachOther() throws IOException {
         LeagueDto league = objectMapper.readValue(soccerTeamsResource.getFile(), LeagueDto.class);
-
         ScheduleInfoDto scheduleInfoDto = gameScheduleService.generateGameSchedule(league);
-        List<GameInfoDto> gameInLeague = scheduleInfoDto.rounds().stream()
-                .flatMap(round -> round.games().stream())
-                .toList();
-        Set<GameInfoDto> uniqueGames = new HashSet<>(gameInLeague);
 
-        assertThat(gameInLeague.size()).isEqualTo(uniqueGames.size());
+        Map<String, List<String>> teamOpponentsMap = new HashMap<>();
+
+        for (RoundInfoDto round : scheduleInfoDto.rounds()) {
+            for (GameInfoDto game : round.games()) {
+                // add each team matches in round
+                teamOpponentsMap.computeIfAbsent(game.firstTeam(), k -> new ArrayList<>()).add(game.secondTeam());
+                teamOpponentsMap.computeIfAbsent(game.secondTeam(), k -> new ArrayList<>()).add(game.firstTeam());
+            }
+
+            teamOpponentsMap.forEach((team, opponents) -> {
+                assertThat(opponents).hasSize(league.teams().size() - 1);  // each team played against all others
+                assertThat(opponents).hasSameSizeAs(new HashSet<>(opponents));  // no opponent is repeated
+            });
+
+            teamOpponentsMap.clear();
+        }
     }
 
 }
