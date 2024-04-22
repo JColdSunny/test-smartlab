@@ -11,6 +11,7 @@ import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 
 import java.time.LocalDateTime;
+import java.time.ZoneOffset;
 import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
 import java.util.List;
@@ -43,7 +44,11 @@ public class GameScheduleService {
         }
 
         int gamesInEachRound = teams.size() - 1;
-        LocalDateTime firstRoundStart = LocalDateTime.parse(startDate + "T" + startTime);
+        LocalDateTime firstRoundStart = LocalDateTime.parse(startDate + "T" + startTime)
+                .atZone(ZoneOffset.UTC)
+                .withFixedOffsetZone()
+                .toLocalDateTime();
+
         List<LocalDateTime> firstRoundDates = getSaturdayDates(firstRoundStart, gamesInEachRound);
 
         RoundInfoDto firstRoundInfo = generateRound(teams, firstRoundDates, Boolean.FALSE);
