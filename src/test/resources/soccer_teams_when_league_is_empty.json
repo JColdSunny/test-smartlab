@@ -1,0 +1,14 @@
+{
+  "league": "",
+  "country": "Germany",
+  "teams": [
+    {
+      "name": "Best marketing",
+      "founding_date": "1998"
+    },
+    {
+      "name": "Hot operations",
+      "founding_date": "2000"
+    }
+  ]
+}

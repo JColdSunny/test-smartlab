@@ -20,6 +20,7 @@ import java.util.stream.Collectors;
 public class GameScheduleService {
     private static final Logger LOG = LoggerFactory.getLogger(GameScheduleService.class);
 
+    private static final DateTimeFormatter DATE_TIME_FORMATTER = DateTimeFormatter.ofPattern("dd.MM.yyyy HH:mm");
     private static final int WEEKS_BETWEEN_ROUNDS = 3;
     private static final int WEEKS_BETWEEN_GAMES = 1;
     private static final int FIRST_LIST_INDEX = 0;
@@ -102,14 +103,11 @@ public class GameScheduleService {
     }
 
     private static void logSchedule(ScheduleInfoDto scheduleInfo) {
-
         String games = scheduleInfo.rounds().stream()
                 .flatMap(round -> round.games().stream())
-                .map(game -> {
-                    DateTimeFormatter dateTimeFormatter = DateTimeFormatter.ofPattern("dd.MM.yyyy HH:mm");
-                    return "%s; %s; %s".formatted(dateTimeFormatter.format(game.date()), game.firstTeam(), game.secondTeam());
-                })
-                .collect(Collectors.joining(System.lineSeparator()));
+                .map(game ->
+                        "%s; %s; %s".formatted(DATE_TIME_FORMATTER.format(game.date()), game.firstTeam(), game.secondTeam())
+                ).collect(Collectors.joining(System.lineSeparator()));
         LOG.info(games);
     }
 

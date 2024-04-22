@@ -11,9 +11,12 @@ import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.web.servlet.WebMvcTest;
 import org.springframework.boot.test.mock.mockito.MockBean;
+import org.springframework.core.io.ClassPathResource;
 import org.springframework.http.MediaType;
 import org.springframework.test.web.servlet.MockMvc;
 
+import java.io.File;
+import java.nio.file.Files;
 import java.time.LocalDateTime;
 import java.util.List;
 
@@ -34,6 +37,8 @@ public class SoccerTeamControllerTest {
 
     @Test
     void testCreateScheduleReturnOk() throws Exception {
+        File file = new ClassPathResource("soccer_teams_correct_request.json").getFile();
+
         when(gameScheduleService.generateGameSchedule(any(LeagueDto.class)))
                 .thenReturn(new ScheduleInfoDto(List.of(
                         new RoundInfoDto(LocalDateTime.now(),
@@ -42,22 +47,7 @@ public class SoccerTeamControllerTest {
 
         mockMvc.perform(post("/soccer/teams/schedule")
                         .contentType(MediaType.APPLICATION_JSON)
-                        .content("""
-                                {
-                                  "league": "smartlab_league",
-                                  "country": "Germany",
-                                  "teams": [
-                                    {
-                                      "name": "Best marketing",
-                                      "founding_date": "1998"
-                                    },
-                                    {
-                                      "name": "Hot operations",
-                                      "founding_date": "2000"
-                                    }
-                                  ]
-                                }
-                                """))
+                        .content(new String(Files.readAllBytes(file.toPath()))))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.rounds").isArray())
                 .andExpect(jsonPath("$.rounds").isNotEmpty())
@@ -75,87 +65,44 @@ public class SoccerTeamControllerTest {
 
         @Test
         void testCreateScheduleWhenEmptyTeamListReturnBadRequest() throws Exception {
+            File file = new ClassPathResource("soccer_teams_when_no_teams.json").getFile();
+
             mockMvc.perform(post("/soccer/teams/schedule")
                             .contentType(MediaType.APPLICATION_JSON)
-                            .content("""
-                                    {
-                                      "league": "smartlab_league",
-                                      "country": "Germany",
-                                      "teams": []
-                                    }
-                                    """))
+                            .content(new String(Files.readAllBytes(file.toPath()))))
                     .andExpect(status().isBadRequest())
                     .andExpect(jsonPath("$.massage").value("teams must not be empty"));
         }
 
         @Test
         void testCreateScheduleWhenLeagueIsBlank() throws Exception {
+            File file = new ClassPathResource("soccer_teams_when_league_is_empty.json").getFile();
+
             mockMvc.perform(post("/soccer/teams/schedule")
                             .contentType(MediaType.APPLICATION_JSON)
-                            .content("""
-                                    {
-                                      "league": "",
-                                      "country": "Germany",
-                                      "teams": [
-                                        {
-                                          "name": "Best marketing",
-                                          "founding_date": "1998"
-                                        },
-                                        {
-                                          "name": "Hot operations",
-                                          "founding_date": "2000"
-                                        }
-                                      ]
-                                    }
-                                    """))
+                            .content(new String(Files.readAllBytes(file.toPath()))))
                     .andExpect(status().isBadRequest())
                     .andExpect(jsonPath("$.massage").value("league must not be null or blank"));
         }
 
         @Test
         void testCreateScheduleWhenCountryIsBlank() throws Exception {
+            File file = new ClassPathResource("soccer_teams_when_country_is_empty.json").getFile();
+
             mockMvc.perform(post("/soccer/teams/schedule")
                             .contentType(MediaType.APPLICATION_JSON)
-                            .content("""
-                                    {
-                                      "league": "smartlab_league",
-                                      "country": "",
-                                      "teams": [
-                                        {
-                                          "name": "Best marketing",
-                                          "founding_date": "1998"
-                                        },
-                                        {
-                                          "name": "Hot operations",
-                                          "founding_date": "2000"
-                                        }
-                                      ]
-                                    }
-                                    """))
+                            .content(new String(Files.readAllBytes(file.toPath()))))
                     .andExpect(status().isBadRequest())
                     .andExpect(jsonPath("$.massage").value("country must not be null or blank"));
         }
 
         @Test
         void testCreateScheduleWhenTeamNameIsBlank() throws Exception {
+            File file = new ClassPathResource("soccer_teams_when_team_name_is_empty.json").getFile();
+
             mockMvc.perform(post("/soccer/teams/schedule")
                             .contentType(MediaType.APPLICATION_JSON)
-                            .content("""
-                                    {
-                                      "league": "smartlab_league",
-                                      "country": "Germany",
-                                      "teams": [
-                                        {
-                                          "name": "",
-                                          "founding_date": "1998"
-                                        },
-                                        {
-                                          "name": "Hot operations",
-                                          "founding_date": "2000"
-                                        }
-                                      ]
-                                    }
-                                    """))
+                            .content(new String(Files.readAllBytes(file.toPath()))))
                     .andExpect(status().isBadRequest())
                     .andExpect(jsonPath("$.massage").value("name must not be null or blank"));
         }

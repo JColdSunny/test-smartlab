@@ -1,13 +1,11 @@
 package com.jcs.interview.service;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
-import com.fasterxml.jackson.databind.PropertyNamingStrategy;
 import com.jcs.interview.dto.GameInfoDto;
 import com.jcs.interview.dto.LeagueDto;
 import com.jcs.interview.dto.RoundInfoDto;
 import com.jcs.interview.dto.ScheduleInfoDto;
 import com.jcs.interview.dto.TeamDto;
-import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -36,13 +34,7 @@ public class GameScheduleServiceTest {
     @Value("classpath:smartlab_soccer_teams.json")
     private Resource soccerTeamsResource;
 
-    private static ObjectMapper objectMapper;
-
-    @BeforeAll
-    static void init() {
-        objectMapper = new ObjectMapper();
-        objectMapper.setPropertyNamingStrategy(PropertyNamingStrategy.SNAKE_CASE);
-    }
+    private final ObjectMapper objectMapper = new ObjectMapper();
 
     @BeforeEach
     public void setUp() {
