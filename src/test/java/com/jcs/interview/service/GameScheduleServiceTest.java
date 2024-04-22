@@ -6,13 +6,11 @@ import com.jcs.interview.dto.LeagueDto;
 import com.jcs.interview.dto.RoundInfoDto;
 import com.jcs.interview.dto.ScheduleInfoDto;
 import com.jcs.interview.dto.TeamDto;
-import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.core.io.Resource;
-import org.springframework.test.util.ReflectionTestUtils;
 
 import java.io.IOException;
 import java.time.LocalDateTime;
@@ -35,12 +33,6 @@ public class GameScheduleServiceTest {
     private Resource soccerTeamsResource;
 
     private final ObjectMapper objectMapper = new ObjectMapper();
-
-    @BeforeEach
-    public void setUp() {
-        ReflectionTestUtils.setField(gameScheduleService, "startDate", "2020-10-17");
-        ReflectionTestUtils.setField(gameScheduleService, "startTime", "17:00");
-    }
 
     @Test
     public void testGenerateWhenEvenNumberOfTeams() {
