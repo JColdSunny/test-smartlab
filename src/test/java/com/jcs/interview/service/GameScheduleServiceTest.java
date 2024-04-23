@@ -20,7 +20,6 @@ import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
-import java.util.Set;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatNoException;
@@ -114,13 +113,13 @@ public class GameScheduleServiceTest {
     @Test
     public void testEachTeamPlayedOnlyOnceAgainstEachOther() throws IOException {
         LeagueDto league = objectMapper.readValue(soccerTeamsResource.getFile(), LeagueDto.class);
+
         ScheduleInfoDto scheduleInfoDto = gameScheduleService.generateGameSchedule(league);
 
         Map<String, List<String>> teamOpponentsMap = new HashMap<>();
-
         for (RoundInfoDto round : scheduleInfoDto.rounds()) {
             for (GameInfoDto game : round.games()) {
-                // add each team matches in round
+                // add each team matches in a round
                 teamOpponentsMap.computeIfAbsent(game.firstTeam(), k -> new ArrayList<>()).add(game.secondTeam());
                 teamOpponentsMap.computeIfAbsent(game.secondTeam(), k -> new ArrayList<>()).add(game.firstTeam());
             }
