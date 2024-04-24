@@ -5,12 +5,14 @@ import com.jcs.interview.dto.LeagueDto;
 import com.jcs.interview.dto.RoundInfoDto;
 import com.jcs.interview.dto.ScheduleInfoDto;
 import com.jcs.interview.dto.TeamDto;
+import jakarta.validation.ValidationException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 
 import java.time.LocalDateTime;
+import java.time.OffsetDateTime;
 import java.time.ZoneOffset;
 import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
@@ -40,23 +42,21 @@ public class GameScheduleService {
     public ScheduleInfoDto generateGameSchedule(LeagueDto league) {
         List<TeamDto> teams = league.teams();
         if (isTeamCountOdd(teams.size())) {
-            throw new IllegalStateException("The number of teams must be even");
+            throw new ValidationException("The number of teams must be even");
         }
 
         int gamesInEachRound = teams.size() - 1;
-        LocalDateTime firstRoundStart = LocalDateTime.parse(startDate + "T" + startTime)
-                .atZone(ZoneOffset.UTC)
-                .withFixedOffsetZone()
-                .toLocalDateTime();
+        OffsetDateTime firstRoundStart = LocalDateTime.parse(startDate + "T" + startTime)
+                .atOffset(ZoneOffset.UTC);
 
-        List<LocalDateTime> firstRoundDates = getSaturdayDates(firstRoundStart, gamesInEachRound);
+        List<OffsetDateTime> firstRoundDates = getSaturdayDates(firstRoundStart, gamesInEachRound);
 
         RoundInfoDto firstRoundInfo = generateRound(teams, firstRoundDates, Boolean.FALSE);
 
-        LocalDateTime firstRoundLastDate = firstRoundDates.getLast();
-        LocalDateTime secondRoundStart = firstRoundLastDate.plusWeeks(WEEKS_BETWEEN_ROUNDS);
+        OffsetDateTime firstRoundLastDate = firstRoundDates.getLast();
+        OffsetDateTime secondRoundStart = firstRoundLastDate.plusWeeks(WEEKS_BETWEEN_ROUNDS);
 
-        List<LocalDateTime> secondRoundDates = getSaturdayDates(secondRoundStart, gamesInEachRound);
+        List<OffsetDateTime> secondRoundDates = getSaturdayDates(secondRoundStart, gamesInEachRound);
 
         RoundInfoDto secondRoundInfo = generateRound(teams, secondRoundDates, Boolean.TRUE);
 
@@ -69,8 +69,8 @@ public class GameScheduleService {
         return teamSize % 2 != 0;
     }
 
-    private static List<LocalDateTime> getSaturdayDates(LocalDateTime startDate, int weeks) {
-        List<LocalDateTime> dates = new ArrayList<>();
+    private static List<OffsetDateTime> getSaturdayDates(OffsetDateTime startDate, int weeks) {
+        List<OffsetDateTime> dates = new ArrayList<>();
         for (int i = 0; i < weeks; i++) {
             dates.add(startDate);
             startDate = startDate.plusWeeks(WEEKS_BETWEEN_GAMES);
@@ -78,8 +78,8 @@ public class GameScheduleService {
         return dates;
     }
 
-    private RoundInfoDto generateRound(List<TeamDto> teams,
-                                       List<LocalDateTime> dates,
+    private static RoundInfoDto generateRound(List<TeamDto> teams,
+                                       List<OffsetDateTime> dates,
                                        boolean isReverse) {
         List<TeamDto> firstHalfTeams;
         List<TeamDto> secondHalfTeams;
@@ -93,7 +93,7 @@ public class GameScheduleService {
         }
 
         List<GameInfoDto> games = new ArrayList<>();
-        for (LocalDateTime date : dates) {
+        for (OffsetDateTime date : dates) {
             for (int i = 0; i < teams.size() / DIVISION_FACTOR; i++) {
                 games.add(new GameInfoDto(date, firstHalfTeams.get(i).name(), secondHalfTeams.get(i).name()));
             }

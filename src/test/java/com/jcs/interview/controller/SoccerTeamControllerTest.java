@@ -5,6 +5,7 @@ import com.jcs.interview.dto.LeagueDto;
 import com.jcs.interview.dto.RoundInfoDto;
 import com.jcs.interview.dto.ScheduleInfoDto;
 import com.jcs.interview.service.GameScheduleService;
+import jakarta.validation.ValidationException;
 import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Tag;
 import org.junit.jupiter.api.Test;
@@ -17,7 +18,7 @@ import org.springframework.test.web.servlet.MockMvc;
 
 import java.io.File;
 import java.nio.file.Files;
-import java.time.LocalDateTime;
+import java.time.OffsetDateTime;
 import java.util.List;
 
 import static org.mockito.ArgumentMatchers.any;
@@ -41,8 +42,8 @@ public class SoccerTeamControllerTest {
 
         when(gameScheduleService.generateGameSchedule(any(LeagueDto.class)))
                 .thenReturn(new ScheduleInfoDto(List.of(
-                        new RoundInfoDto(LocalDateTime.now(),
-                                List.of(new GameInfoDto(LocalDateTime.now(), "team1", "team2")))
+                        new RoundInfoDto(OffsetDateTime.now(),
+                                List.of(new GameInfoDto(OffsetDateTime.now(), "team1", "team2")))
                 )));
 
         mockMvc.perform(post("/soccer/teams/schedule")
@@ -105,6 +106,20 @@ public class SoccerTeamControllerTest {
                             .content(new String(Files.readAllBytes(file.toPath()))))
                     .andExpect(status().isBadRequest())
                     .andExpect(jsonPath("$.massage").value("name must not be null or blank"));
+        }
+
+        @Test
+        void testCreateScheduleWhenTeamNumberIsOdd() throws Exception {
+            File file = new ClassPathResource("soccer_teams_when_team_number_is_odd.json").getFile();
+
+            when(gameScheduleService.generateGameSchedule(any(LeagueDto.class)))
+                    .thenThrow(new ValidationException("test failed"));
+
+            mockMvc.perform(post("/soccer/teams/schedule")
+                            .contentType(MediaType.APPLICATION_JSON)
+                            .content(new String(Files.readAllBytes(file.toPath()))))
+                    .andExpect(status().isBadRequest())
+                    .andExpect(jsonPath("$.massage").value("test failed"));
         }
 
     }

@@ -6,6 +6,7 @@ import com.jcs.interview.dto.LeagueDto;
 import com.jcs.interview.dto.RoundInfoDto;
 import com.jcs.interview.dto.ScheduleInfoDto;
 import com.jcs.interview.dto.TeamDto;
+import jakarta.validation.ValidationException;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
@@ -13,7 +14,7 @@ import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.core.io.Resource;
 
 import java.io.IOException;
-import java.time.LocalDateTime;
+import java.time.OffsetDateTime;
 import java.time.temporal.ChronoUnit;
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -57,7 +58,7 @@ public class GameScheduleServiceTest {
         LeagueDto league = new LeagueDto("league", "country", oddTeams);
 
         assertThatThrownBy(() -> gameScheduleService.generateGameSchedule(league))
-                .isInstanceOf(IllegalStateException.class)
+                .isInstanceOf(ValidationException.class)
                 .hasMessage("The number of teams must be even");
     }
 
@@ -102,8 +103,8 @@ public class GameScheduleServiceTest {
         LeagueDto league = objectMapper.readValue(soccerTeamsResource.getFile(), LeagueDto.class);
 
         ScheduleInfoDto scheduleInfoDto = gameScheduleService.generateGameSchedule(league);
-        LocalDateTime firstRoundLastDate = scheduleInfoDto.rounds().getFirst().games().getLast().date();
-        LocalDateTime secondRoundFirstDate = scheduleInfoDto.rounds().getLast().roundStartDate();
+        OffsetDateTime firstRoundLastDate = scheduleInfoDto.rounds().getFirst().games().getLast().date();
+        OffsetDateTime secondRoundFirstDate = scheduleInfoDto.rounds().getLast().roundStartDate();
 
         assertThat(scheduleInfoDto).isNotNull();
         assertThat(scheduleInfoDto.rounds()).hasSize(2);
@@ -116,8 +117,8 @@ public class GameScheduleServiceTest {
 
         ScheduleInfoDto scheduleInfoDto = gameScheduleService.generateGameSchedule(league);
 
-        Map<String, List<String>> teamOpponentsMap = new HashMap<>();
         for (RoundInfoDto round : scheduleInfoDto.rounds()) {
+            Map<String, List<String>> teamOpponentsMap = new HashMap<>();
             for (GameInfoDto game : round.games()) {
                 // add each team matches in a round
                 teamOpponentsMap.computeIfAbsent(game.firstTeam(), k -> new ArrayList<>()).add(game.secondTeam());
@@ -128,8 +129,6 @@ public class GameScheduleServiceTest {
                 assertThat(opponents).hasSize(league.teams().size() - 1);  // each team played against all others
                 assertThat(opponents).hasSameSizeAs(new HashSet<>(opponents));  // no opponent is repeated
             });
-
-            teamOpponentsMap.clear();
         }
     }
 

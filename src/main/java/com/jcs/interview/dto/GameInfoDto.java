@@ -2,11 +2,11 @@ package com.jcs.interview.dto;
 
 import com.fasterxml.jackson.annotation.JsonFormat;
 
-import java.time.LocalDateTime;
+import java.time.OffsetDateTime;
 
 public record GameInfoDto(
         @JsonFormat(pattern = "dd.MM.yyyy HH:mm")
-        LocalDateTime date,
+        OffsetDateTime date,
         String firstTeam,
         String secondTeam
 ) {

@@ -1,0 +1,18 @@
+{
+  "league": "smartlab_league",
+  "country": "Germany",
+  "teams": [
+    {
+      "name": "Best marketing",
+      "founding_date": "1998"
+    },
+    {
+      "name": "Hot operations",
+      "founding_date": "2000"
+    },
+    {
+      "name": "Odd team",
+      "founding_date": "2001"
+    }
+  ]
+}
