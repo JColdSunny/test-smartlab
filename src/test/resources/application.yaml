@@ -1,0 +1,9 @@
+spring:
+  jackson:
+    property-naming-strategy: SNAKE_CASE
+
+application:
+  game:
+    start:
+      date: 2020-10-17
+      time: "17:00"
