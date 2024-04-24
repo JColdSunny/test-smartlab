@@ -1,5 +1,5 @@
 {
-  "league": "smartlab_league",
+  "league": "smartlab league",
   "country": "Germany",
   "teams": [
     {
@@ -18,7 +18,7 @@
       "founding_date": "2001"
     },
     {
-      "name": "Salfish sales"
+      "name": "Selfish sales"
     },
     {
       "name": "Whatever comes next"
